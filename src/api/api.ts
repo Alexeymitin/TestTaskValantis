@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { md5 } from "js-md5";
+import { Product } from "../components/types/types";
 
 export enum Actions {
 	filter = "filter",
@@ -28,7 +29,7 @@ export interface FieldsParams {
 
 export interface Request {
 	action: Actions;
-	params?: IdParams | ItemsParams | FieldsParams;
+	params?: IdParams | ItemsParams | FieldsParams | FilterParams<Product>;
 }
 
 interface Answer<T> {
@@ -58,6 +59,7 @@ export const customFetch = async <T>(request: Request): Promise<Answer<T>> => {
 				retries++;
 				throw new Error("Ошибка авторизации");
 			} else {
+				retries++;
 				throw new Error(`${response.status}`);
 			}
 		} catch (error) {
@@ -68,14 +70,4 @@ export const customFetch = async <T>(request: Request): Promise<Answer<T>> => {
 	}
 
 	throw new Error("Не удалось выполнить запрос после нескольких попыток");
-};
-
-const getField = {
-	action: Actions.getFields,
-	params: { field: "brand", offset: 3 },
-};
-
-const filter = {
-	action: Actions.filter,
-	params: { price: 17500.0 },
 };
