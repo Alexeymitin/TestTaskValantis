@@ -10,7 +10,7 @@ const App = () => {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | undefined>(undefined);
-	const itemsPerPage = 10;
+	const itemsPerPage = 50;
 	const offset = (currentPage - 1) * itemsPerPage;
 
 	const fetchProducts = useCallback(async () => {
