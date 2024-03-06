@@ -2,13 +2,12 @@ import { Product } from "../../../types/types";
 
 interface RowProps {
 	product: Product;
-	key?: string;
 }
 
 export const Row = (props: RowProps) => {
-	const { product, key } = props;
+	const { product } = props;
 	return (
-		<tr key={key}>
+		<tr>
 			<td>{product.id}</td>
 			<td>{product.brand}</td>
 			<td>{product.price}</td>

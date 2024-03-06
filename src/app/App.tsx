@@ -1,24 +1,64 @@
-import { useEffect, useState } from "react";
-import { Table } from "../components/TableItems/Table/ui/Table";
-import "./App.css";
-import { Actions, customFetch } from "../api/api";
+import { useCallback, useEffect, useState } from "react";
 import { fetchItems } from "../api/fetchItems";
+import cls from "./App.module.scss";
+import { Product } from "../components/types/types";
+import { Table } from "../components/TableItems";
 
 const App = () => {
-	const [products, setProducts] = useState([]);
-	useEffect(() => {
-		const data = fetchItems(0, 50);
-		if (data !== undefined) {
-			setProducts(data);
+	const [products, setProducts] = useState<Product[]>([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState("");
+	const itemsPerPage = 10;
+	const offset = (currentPage - 1) * itemsPerPage;
+
+	const fetchProducts = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const items = await fetchItems(offset, itemsPerPage);
+			if (items !== undefined) {
+				setProducts(items);
+			}
+		} catch (error) {
+			console.log(error);
+			setError(`${error}`);
+		} finally {
+			setIsLoading(false);
 		}
-	}, [products]);
+	}, [offset]);
+
+	useEffect(() => {
+		fetchProducts();
+	}, [fetchProducts]);
+
+	const getNextPage = () => {
+		setCurrentPage((prev) => prev + 1);
+	};
+
+	const getPrevPage = () => {
+		setCurrentPage((prev) => {
+			if (prev > 1) {
+				return prev - 1;
+			} else {
+				return prev;
+			}
+		});
+	};
 
 	return (
-		<div className="App">
-			<header className="App-header">
-				<Table data={products} />
-			</header>
-		</div>
+		<main className={cls.main}>
+			<section className={cls.mainSection}>
+				<div className={cls.buttonWrapper}>
+					<button type="button" onClick={getPrevPage}>
+						Prev
+					</button>
+					<button type="button" onClick={getNextPage}>
+						Next
+					</button>
+				</div>
+				<Table data={products} isLoading={isLoading} error={error} />
+			</section>
+		</main>
 	);
 };
 

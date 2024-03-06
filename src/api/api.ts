@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { md5 } from "js-md5";
-import { Product } from "../components/types/types";
 
 export enum Actions {
 	filter = "filter",
@@ -10,46 +9,37 @@ export enum Actions {
 }
 
 export type FilterParams<T> = {
-	[K in keyof T]?: T[K]
-}
+	[K in keyof T]?: T[K];
+};
 
 export interface IdParams {
-	offset: number
-	limit: number
+	offset: number;
+	limit: number;
 }
 
 export interface ItemsParams {
-	ids: string[]
+	ids: string[];
 }
 export interface FieldsParams {
-	field: string
-	offset: number
-	limit: number
+	field: string;
+	offset: number;
+	limit: number;
 }
 
-export type ActionsParams<T> = T extends Actions.filter 
-? FilterParams<Product> 
-: T extends Actions.getID 
-? IdParams
-: T extends Actions.getItems
-? ItemsParams
-: FieldsParams
-
-
-export interface Request { 
-	action: Actions
-	params?: ActionsParams<Actions>
+export interface Request {
+	action: Actions;
+	params?: IdParams | ItemsParams | FieldsParams;
 }
 
-interface Answer extends Response {
-	result: []
+interface Answer<T> {
+	result: T[];
 }
 
 const password = "Valantis";
-const timestamp = new Date().toISOString().slice(0,10).replace(/-/g,"");
+const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
 const token = md5(`${password}_${timestamp}`).toString();
 
-export const customFetch = async (request: Request): Promise<Answer | any> => {
+export const customFetch = async <T>(request: Request): Promise<Answer<T>> => {
 	let retries = 0;
 	while (retries < 2) {
 		try {
@@ -57,32 +47,35 @@ export const customFetch = async (request: Request): Promise<Answer | any> => {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"X-Auth": token
+					"X-Auth": token,
 				},
 				body: JSON.stringify(request),
 			});
 			if (response.ok) {
 				retries = 2;
-				return response.json();
-			} else {
+				return await response.json();
+			} else if (response.status === 401) {
 				retries++;
+				throw new Error("Ошибка авторизации");
+			} else {
+				throw new Error(`${response.status}`);
 			}
 		} catch (error) {
 			retries++;
 			console.log(error);
+			throw new Error(`Произошла ошибка при запросе - ${error}`);
 		}
 	}
+
+	throw new Error("Не удалось выполнить запрос после нескольких попыток");
 };
 
-
-
 const getField = {
-	"action": Actions.getFields,
-	"params": {"field": "brand", "offset": 3}
+	action: Actions.getFields,
+	params: { field: "brand", offset: 3 },
 };
 
 const filter = {
-	"action": Actions.filter,
-	"params": {"price": 17500.0}
+	action: Actions.filter,
+	params: { price: 17500.0 },
 };
-
